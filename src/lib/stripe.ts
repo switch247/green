@@ -31,7 +31,7 @@ export async function hasSubscription() {
 
 export async function checkOutLink(customerId: any) {
   const checkout = await stripe.checkout.sessions.create({
-    success_url: 'http://localhost:3000/dashboard/billing?success=true',  // Specify the URL to redirect to after successful payment
+    success_url: 'http://localhost:3000/dashboard/billing?success=true', // Specify the URL to redirect to after successful payment
     cancel_url: 'http://localhost:3000/dashboard/billing?cancel=true', // Specify the URL to redirect to if the payment is canceled
     customer: customerId,
     line_items: [
@@ -68,20 +68,24 @@ export const createCustomer = async () => {
         email: String(user?.email),
         description: 'test customer',
       };
+      try {
+        const customer: Stripe.Customer = await stripe.customers.create(params);
 
-      const customer: Stripe.Customer = await stripe.customers.create(params);
+        //   console.log(customer.id);
+        //   update the user by adding the customer id from stripe db to the user in our postgress db
+        await prisma.user.update({
+          where: {
+            id: user?.id,
+          },
+          data: {
+            stripe_customer_id: customer.id,
+            //   api_key:'apiKey_'+randomUUID,
+          },
+        });
+      } catch (error) {
+        console.log({ error: error });
+      }
 
-      //   console.log(customer.id);
-      //   update the user by adding the customer id from stripe db to the user in our postgress db
-      await prisma.user.update({
-        where: {
-          id: user?.id,
-        },
-        data: {
-          stripe_customer_id: customer.id,
-          //   api_key:'apiKey_'+randomUUID,
-        },
-      });
       //   refetch user after updating
       const user2 = await prisma.user.findFirst({
         where: { email: session.user?.email },

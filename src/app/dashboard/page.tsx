@@ -13,6 +13,7 @@ export default async function Page() {
     const customer = await createCustomer();
     const hasSub = await hasSubscription();
     const checkoutLink = await checkOutLink(String(customer));
+    // link to subscribe
     const session = await getServerSession(authOptions);
     const user = await prisma.user.findFirst({
         where: { email: session?.user?.email },
